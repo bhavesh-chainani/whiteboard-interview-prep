@@ -208,6 +208,106 @@ app.get('/api/interview-types', (req, res) => {
   res.json(types);
 });
 
+// Generate feedback endpoint
+app.post('/api/feedback', async (req, res) => {
+  try {
+    const { sessionId, duration } = req.body;
+
+    if (!sessionId || !sessions.has(sessionId)) {
+      return res.status(400).json({ error: 'Invalid session' });
+    }
+
+    const conversation = sessions.get(sessionId);
+    
+    // Build transcript for the feedback prompt
+    const transcript = conversation
+      .filter(m => m.role !== 'system')
+      .map(m => {
+        const role = m.role === 'assistant' ? 'Interviewer' : 'Candidate';
+        const content = typeof m.content === 'string' 
+          ? m.content 
+          : m.content.find(c => c.type === 'text')?.text || '[Whiteboard submission]';
+        return `${role}: ${content}`;
+      })
+      .join('\n\n');
+
+    const feedbackPrompt = `You are evaluating a Google interview for an Advertising Solutions Architect role in gTech Ads.
+
+Based on the interview transcript below, provide structured feedback in the following JSON format:
+
+{
+  "summary": "2-3 sentence overview of the interview",
+  "ratings": {
+    "problemUnderstanding": { "score": "Strong|Good|Developing|Needs Work", "comment": "brief explanation" },
+    "clarifyingQuestions": { "score": "Strong|Good|Developing|Needs Work", "comment": "brief explanation" },
+    "thoughtProcess": { "score": "Strong|Good|Developing|Needs Work", "comment": "brief explanation" },
+    "technicalDepth": { "score": "Strong|Good|Developing|Needs Work", "comment": "brief explanation" },
+    "tradeoffAnalysis": { "score": "Strong|Good|Developing|Needs Work", "comment": "brief explanation" },
+    "communication": { "score": "Strong|Good|Developing|Needs Work", "comment": "brief explanation" }
+  },
+  "strengths": ["strength 1", "strength 2", "strength 3"],
+  "areasForImprovement": ["area 1", "area 2", "area 3"],
+  "overallAssessment": "Strong Hire|Hire|Lean Hire|Lean No Hire|No Hire",
+  "recommendation": "1-2 sentence hiring recommendation"
+}
+
+EVALUATION CRITERIA (Google style):
+- Problem Understanding: Did they grasp the requirements? Did they identify key constraints?
+- Clarifying Questions: Did they ask good questions before diving in? Did they scope appropriately?
+- Thought Process: Did they explain their reasoning clearly? Was their approach structured?
+- Technical Depth: Did they demonstrate solid knowledge? Could they go deep when probed?
+- Trade-off Analysis: Did they consider alternatives? Could they articulate pros/cons?
+- Communication: Were explanations clear and concise? Did they collaborate well?
+
+SCORING GUIDE:
+- Strong: Exceeds expectations, would be a strong addition to the team
+- Good: Meets expectations, solid performance
+- Developing: Shows potential but has gaps
+- Needs Work: Did not meet expectations
+
+Interview Duration: ${duration}
+
+INTERVIEW TRANSCRIPT:
+${transcript}
+
+Respond ONLY with the JSON object, no other text.`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: 'You are an expert interview evaluator. Respond only with valid JSON.' },
+        { role: 'user', content: feedbackPrompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 2000,
+    });
+
+    let feedbackText = completion.choices[0].message.content;
+    
+    // Clean up the response - remove markdown code blocks if present
+    feedbackText = feedbackText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
+    const feedback = JSON.parse(feedbackText);
+
+    res.json({ 
+      feedback,
+      transcript: conversation.filter(m => m.role !== 'system').map(m => ({
+        role: m.role,
+        content: typeof m.content === 'string' 
+          ? m.content 
+          : m.content.find(c => c.type === 'text')?.text || '[Whiteboard submission]'
+      }))
+    });
+
+  } catch (error) {
+    console.error('Feedback generation error:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate feedback',
+      details: error.message 
+    });
+  }
+});
+
 // Reset session endpoint
 app.post('/api/reset', (req, res) => {
   const { sessionId } = req.body;

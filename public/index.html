@@ -44,8 +44,8 @@
                   <line x1="18" y1="16" x2="15" y2="14"/>
                 </svg>
               </div>
-              <span class="option-title">System Design</span>
-              <span class="option-desc">Ad tech architecture, measurement systems, data pipelines, attribution, real-time bidding</span>
+              <span class="option-title">Systems Solutioning</span>
+              <span class="option-desc">Whiteboard architecture, end-to-end systems, code evaluation, trade-offs, resource estimation</span>
             </button>
             <button class="option-btn" data-type="webtech">
               <div class="option-icon">
@@ -56,7 +56,7 @@
                 </svg>
               </div>
               <span class="option-title">Web Technologies</span>
-              <span class="option-desc">JavaScript, tagging, GTM, analytics, cookies, tracking pixels, consent handling</span>
+              <span class="option-desc">Theoretical knowledge: HTTP, JavaScript, async, DOM, debugging, scaling (no coding required)</span>
             </button>
           </div>
         </div>
@@ -72,13 +72,19 @@
         </div>
 
         <div class="focus-areas">
-          <h3>Key Topics Covered</h3>
+          <h3>What Google Evaluates</h3>
           <div class="topics-grid">
             <div class="topic-item">
-              <strong>System Design:</strong> Ad tracking, attribution, measurement pipelines, RTB, consent management
+              <strong>Problem Understanding:</strong> Do you ask clarifying questions? Do you understand requirements?
             </div>
             <div class="topic-item">
-              <strong>Web Tech:</strong> JavaScript, GTM, tagging, cookies, dataLayer, GA4, conversion tracking
+              <strong>Thought Process:</strong> Can you explain your reasoning clearly and succinctly?
+            </div>
+            <div class="topic-item">
+              <strong>Trade-offs:</strong> Can you discuss alternatives, limitations, and design decisions?
+            </div>
+            <div class="topic-item">
+              <strong>Systems Thinking:</strong> Can you translate abstract problems into end-to-end systems?
             </div>
           </div>
         </div>
@@ -233,6 +239,45 @@
     <div class="loading-overlay" id="loading-overlay">
       <div class="loading-spinner"></div>
       <span>Interviewer is reviewing your work...</span>
+    </div>
+
+    <!-- Feedback Screen -->
+    <div id="feedback-screen" class="screen">
+      <div class="feedback-container">
+        <div class="feedback-header">
+          <div class="feedback-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 12l2 2 4-4"/>
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+          </div>
+          <h1>Interview Complete</h1>
+          <p class="feedback-duration">Duration: <span id="final-duration">00:00</span></p>
+        </div>
+
+        <div class="feedback-content" id="feedback-content">
+          <div class="feedback-loading">
+            <div class="loading-spinner"></div>
+            <span>Generating feedback...</span>
+          </div>
+        </div>
+
+        <div class="feedback-actions">
+          <button class="btn-secondary" id="view-transcript">View Full Transcript</button>
+          <button class="btn-primary" id="new-interview">Start New Interview</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transcript Modal -->
+    <div class="modal-overlay" id="transcript-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Interview Transcript</h2>
+          <button class="modal-close" id="close-transcript">&times;</button>
+        </div>
+        <div class="modal-body" id="transcript-content"></div>
+      </div>
     </div>
   </div>
 

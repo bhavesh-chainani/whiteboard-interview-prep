@@ -306,6 +306,19 @@ class InterviewSimulator {
     // Screens
     this.startScreen = document.getElementById('start-screen');
     this.interviewScreen = document.getElementById('interview-screen');
+    this.feedbackScreen = document.getElementById('feedback-screen');
+    
+    // Feedback elements
+    this.feedbackContent = document.getElementById('feedback-content');
+    this.finalDuration = document.getElementById('final-duration');
+    this.viewTranscriptBtn = document.getElementById('view-transcript');
+    this.newInterviewBtn = document.getElementById('new-interview');
+    this.transcriptModal = document.getElementById('transcript-modal');
+    this.transcriptContent = document.getElementById('transcript-content');
+    this.closeTranscriptBtn = document.getElementById('close-transcript');
+    
+    // Store transcript for viewing
+    this.interviewTranscript = [];
 
     // Start screen elements
     this.optionButtons = document.querySelectorAll('.option-btn');
@@ -419,6 +432,11 @@ class InterviewSimulator {
     // End interview
     this.endInterviewBtn.addEventListener('click', () => this.endInterview());
 
+    // Feedback screen buttons
+    this.viewTranscriptBtn?.addEventListener('click', () => this.showTranscript());
+    this.newInterviewBtn?.addEventListener('click', () => this.startNewInterview());
+    this.closeTranscriptBtn?.addEventListener('click', () => this.hideTranscript());
+
     // Whiteboard tools
     this.toolButtons.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -531,7 +549,7 @@ class InterviewSimulator {
 
     // Update UI
     const typeLabels = {
-      'systems-design': 'System Design',
+      'systems-design': 'Systems Solutioning',
       'webtech': 'Web Technologies'
     };
 
@@ -765,11 +783,57 @@ class InterviewSimulator {
   }
 
   async endInterview() {
-    if (!confirm('Are you sure you want to end this interview?')) {
+    if (!confirm('Are you sure you want to end this interview and get feedback?')) {
       return;
     }
 
+    // Stop voice recording if active
+    if (this.speechRecognizer?.isListening) {
+      this.speechRecognizer.stop();
+    }
+
+    // Get final duration
+    const finalDuration = this.timerDisplay.textContent;
     this.stopTimer();
+
+    // Switch to feedback screen
+    this.interviewScreen.classList.remove('active');
+    this.feedbackScreen.classList.add('active');
+    this.finalDuration.textContent = finalDuration;
+
+    // Generate feedback
+    await this.generateFeedback(finalDuration);
+  }
+
+  async generateFeedback(duration) {
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          sessionId: this.sessionId,
+          duration: duration
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate feedback');
+      }
+
+      const data = await response.json();
+      this.interviewTranscript = data.transcript;
+      this.renderFeedback(data.feedback);
+
+    } catch (error) {
+      console.error('Error generating feedback:', error);
+      this.feedbackContent.innerHTML = `
+        <div class="feedback-section">
+          <p style="color: var(--error);">Failed to generate feedback. Please try again.</p>
+        </div>
+      `;
+    }
 
     // Reset session on server
     try {
@@ -783,23 +847,138 @@ class InterviewSimulator {
     } catch (error) {
       console.error('Error resetting session:', error);
     }
+  }
 
-    // Stop voice recording if active
-    if (this.speechRecognizer?.isListening) {
-      this.speechRecognizer.stop();
+  renderFeedback(feedback) {
+    const scoreToPercent = {
+      'Strong': 100,
+      'Good': 75,
+      'Developing': 50,
+      'Needs Work': 25
+    };
+
+    const scoreToClass = {
+      'Strong': 'strong',
+      'Good': 'good',
+      'Developing': 'developing',
+      'Needs Work': 'needs-work'
+    };
+
+    const assessmentClass = {
+      'Strong Hire': 'hire',
+      'Hire': 'hire',
+      'Lean Hire': 'lean-hire',
+      'Lean No Hire': 'lean-no-hire',
+      'No Hire': 'no-hire'
+    };
+
+    const ratingLabels = {
+      problemUnderstanding: 'Problem Understanding',
+      clarifyingQuestions: 'Clarifying Questions',
+      thoughtProcess: 'Thought Process',
+      technicalDepth: 'Technical Depth',
+      tradeoffAnalysis: 'Trade-off Analysis',
+      communication: 'Communication'
+    };
+
+    let ratingsHTML = '';
+    for (const [key, label] of Object.entries(ratingLabels)) {
+      const rating = feedback.ratings[key];
+      if (rating) {
+        const percent = scoreToPercent[rating.score] || 50;
+        const cls = scoreToClass[rating.score] || 'developing';
+        ratingsHTML += `
+          <div class="rating-item">
+            <div class="rating-label">${label}</div>
+            <div class="rating-value">
+              <div class="rating-bar">
+                <div class="rating-fill ${cls}" style="width: ${percent}%"></div>
+              </div>
+              <span class="rating-text ${cls}">${rating.score}</span>
+            </div>
+          </div>
+        `;
+      }
     }
 
+    this.feedbackContent.innerHTML = `
+      <div class="feedback-section">
+        <h2>Summary</h2>
+        <p>${feedback.summary}</p>
+      </div>
+
+      <div class="feedback-section">
+        <h2>Performance Ratings</h2>
+        <div class="rating-grid">
+          ${ratingsHTML}
+        </div>
+      </div>
+
+      <div class="feedback-section">
+        <h2>Strengths</h2>
+        <ul>
+          ${feedback.strengths.map(s => `<li>${s}</li>`).join('')}
+        </ul>
+      </div>
+
+      <div class="feedback-section">
+        <h2>Areas for Improvement</h2>
+        <ul>
+          ${feedback.areasForImprovement.map(a => `<li>${a}</li>`).join('')}
+        </ul>
+      </div>
+
+      <div class="feedback-section">
+        <h2>Recommendation</h2>
+        <p>${feedback.recommendation}</p>
+        <div class="overall-assessment">
+          <div class="assessment-label">Overall Assessment</div>
+          <div class="assessment-value ${assessmentClass[feedback.overallAssessment] || 'lean-hire'}">
+            ${feedback.overallAssessment}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  showTranscript() {
+    if (!this.interviewTranscript.length) return;
+
+    this.transcriptContent.innerHTML = this.interviewTranscript.map(m => `
+      <div class="transcript-message">
+        <div class="transcript-role ${m.role === 'assistant' ? 'interviewer' : 'user'}">
+          ${m.role === 'assistant' ? 'Interviewer' : 'You'}
+        </div>
+        <div class="transcript-text">${this.escapeHtml(m.content)}</div>
+      </div>
+    `).join('');
+
+    this.transcriptModal.classList.add('active');
+  }
+
+  hideTranscript() {
+    this.transcriptModal.classList.remove('active');
+  }
+
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  startNewInterview() {
     // Reset state
     this.sessionId = null;
     this.interviewType = null;
     this.whiteboard = null;
     this.preRecordingNotes = '';
+    this.interviewTranscript = [];
     this.messagesContainer.innerHTML = '';
     this.notesInput.value = '';
     this.timerDisplay.textContent = '00:00';
 
     // Switch screens
-    this.interviewScreen.classList.remove('active');
+    this.feedbackScreen.classList.remove('active');
     this.startScreen.classList.add('active');
   }
 }
