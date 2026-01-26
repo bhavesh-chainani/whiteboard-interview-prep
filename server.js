@@ -46,12 +46,10 @@ function loadPromptyFile(filename) {
 // Load base prompt
 const BASE_PROMPT = loadPromptyFile('base.prompty');
 
-// Load interview-specific prompts
+// Load interview-specific prompts (Google Ads focused)
 const INTERVIEW_PROMPTS = {
   'systems-design': loadPromptyFile('systems-design.prompty'),
-  'frontend': loadPromptyFile('frontend.prompty'),
-  'backend': loadPromptyFile('backend.prompty'),
-  'algorithms': loadPromptyFile('algorithms.prompty'),
+  'webtech': loadPromptyFile('webtech.prompty'),
 };
 
 // Build complete prompt for interview type

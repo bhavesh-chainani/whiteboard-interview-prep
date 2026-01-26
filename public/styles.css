@@ -164,6 +164,11 @@ body {
   gap: 1rem;
 }
 
+.option-grid-2 {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
 @media (max-width: 600px) {
   .option-grid {
     grid-template-columns: 1fr;
@@ -227,6 +232,7 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .instructions h3 {
@@ -266,6 +272,39 @@ body {
   font-weight: 600;
   color: var(--accent-primary);
   font-family: var(--font-mono);
+}
+
+/* Focus Areas */
+.focus-areas {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 2rem;
+}
+
+.focus-areas h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.topics-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.topic-item {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.topic-item strong {
+  color: var(--accent-primary);
 }
 
 /* Interview Screen */

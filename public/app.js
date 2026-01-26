@@ -531,10 +531,8 @@ class InterviewSimulator {
 
     // Update UI
     const typeLabels = {
-      'systems-design': 'Systems Design',
-      'frontend': 'Frontend Engineering',
-      'backend': 'Backend Engineering',
-      'algorithms': 'Algorithms & Data Structures'
+      'systems-design': 'System Design',
+      'webtech': 'Web Technologies'
     };
 
     this.interviewTypeBadge.textContent = typeLabels[type] || type;
