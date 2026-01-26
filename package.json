@@ -1,0 +1,26 @@
+{
+  "name": "whiteboard-interview-prep",
+  "version": "1.0.0",
+  "description": "AI-powered whiteboard interview simulator for FAANG-level technical interviews",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "openai": "^4.20.1",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5"
+  },
+  "keywords": [
+    "interview",
+    "whiteboard",
+    "technical-interview",
+    "ai",
+    "practice"
+  ],
+  "author": "",
+  "license": "MIT"
+}
