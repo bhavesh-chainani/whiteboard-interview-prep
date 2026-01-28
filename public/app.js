@@ -558,6 +558,7 @@ class InterviewSimulator {
     // Switch screens
     this.startScreen.classList.remove('active');
     this.interviewScreen.classList.add('active');
+    document.body.classList.add('interview-active');
 
     // Initialize whiteboard
     setTimeout(() => {
@@ -746,6 +747,10 @@ class InterviewSimulator {
       imageData,
       imageContext
     );
+
+    // Clear notes after submission so user can write fresh for follow-ups
+    this.notesInput.value = '';
+    this.preRecordingNotes = '';
   }
 
   async getInterviewerResponse(userMessage, imageData, imageContext) {
@@ -799,6 +804,7 @@ class InterviewSimulator {
     // Switch to feedback screen
     this.interviewScreen.classList.remove('active');
     this.feedbackScreen.classList.add('active');
+    document.body.classList.remove('interview-active');
     this.finalDuration.textContent = finalDuration;
 
     // Generate feedback
